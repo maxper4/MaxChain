@@ -1,0 +1,10 @@
+{
+    "ListeningPort": 4444,
+    "Peers": [
+        {
+            "Name": "Peer1",
+            "Ip": "0.0.0.0",
+            "Port": 4444
+        }
+    ]
+}
