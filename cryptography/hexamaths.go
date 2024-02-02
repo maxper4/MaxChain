@@ -71,13 +71,11 @@ func (m mInt) Sub(m2 mInt) mInt {
 	}
 
 	var m3 mInt
-	digitsNb := len(m.digits)
-	if len(m2.digits) < digitsNb {
-		digitsNb = len(m2.digits)
-	}
-	m3.digits = make([]uint8, digitsNb)
 	mdigits := m.getDigits()
 	m2digits := m2.getDigits()
+	digitsNb := len(m2digits)
+
+	m3.digits = make([]uint8, len(mdigits))
 
 	for i := 0; i < digitsNb; i++ {
 		if mdigits[i] < m2digits[i] {
@@ -90,7 +88,22 @@ func (m mInt) Sub(m2 mInt) mInt {
 	for i, j := 0, len(m3.digits)-1; i < j; i, j = i+1, j-1 {
 		m3.digits[i], m3.digits[j] = m3.digits[j], m3.digits[i]
 	}
+
+	for i := 0; i < len(m3.digits); i++ {	// remove leading 0s
+		if m3.digits[i] != 0 {
+			m3.digits = m3.digits[i:]
+			break
+		}
+	}
+
 	return m3
+}
+
+func (m mInt) SubMod(m2 mInt, mod mInt) mInt {
+	if !m.GreaterEq(m2) {
+		return m.Add(mod).SubMod(m2, mod)
+	}
+	return m.Sub(m2).Mod(mod)
 }
 
 func (m mInt) Multi(i int) mInt {
