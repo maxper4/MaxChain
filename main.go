@@ -2,30 +2,30 @@ package main
 
 import (
 	"fmt"
-	//"maxchain/config"
-	//"maxchain/networking"
+	"maxchain/config"
 	"maxchain/cryptography"
+	"maxchain/logging"
+	"maxchain/networking"
 )
 
-
 func main() {
-	fmt.Println("Starting MaxChain...")
-	// config, err := config.LoadConfiguration("config/config.json")
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	panic("Cannot load configuration")
-	// }
-	// networking.Init(config)
-	// fmt.Println("MaxChain started")
+	config, err := config.LoadConfiguration("config/config.json")
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("Cannot load configuration")
+	}
+	logging.Init(config)
+	networking.Init(config)
+	logging.Log("MaxChain started", "main", "INFO")
 
 	//testMaths()
-	cryptography.TestCrypto()
+	//cryptography.TestCrypto()
 
 	for true {
 	}
 }
 
-func testMaths () {
+func testMaths() {
 	nb := cryptography.MIntFromString("123456789abcdef")
 	fmt.Println(nb)
 	fmt.Println(nb.ToString())

@@ -6,5 +6,7 @@
             "Ip": "0.0.0.0",
             "Port": 4444
         }
-    ]
+    ],
+    "LogFilePath": "log.txt",
+    "LogLevel": "DEBUG"
 }
