@@ -1,15 +1,15 @@
 package cryptography
 
 type EllipticCurve struct {
-	a mInt
-	b mInt
-	n mInt
+	a MInt
+	b MInt
+	n MInt
 	g Point
 }
 
 type Point struct {
-	x mInt
-	y mInt
+	x     MInt
+	y     MInt
 	curve *EllipticCurve
 }
 
@@ -38,7 +38,7 @@ func (point Point) Add(point2 Point) Point {
 	return Point{xr, yr, point.curve}
 }
 
-func (point Point) Multiply(k mInt) Point {
+func (point Point) Multiply(k MInt) Point {
 	if k.Eq(MIntFromString("1")) {
 		return point
 	}

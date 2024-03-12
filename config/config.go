@@ -13,10 +13,11 @@ type Peer struct {
 }
 
 type Configuration struct {
-	ListeningPort int
-	Peers         []Peer
-	LogFilePath   string
-	LogLevel      string
+	ListeningPort             int
+	Peers                     []Peer
+	LogFilePath               string
+	LogLevel                  string
+	DropConnectionAfterErrors int
 }
 
 func LoadConfiguration(file string) (Configuration, error) {
