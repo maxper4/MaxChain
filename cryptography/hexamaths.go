@@ -2,7 +2,6 @@ package cryptography
 
 import (
 	"math/rand"
-	"strconv"
 )
 
 type MInt struct {
@@ -47,7 +46,18 @@ func (m MInt) Add(m2 MInt) MInt {
 			if i >= len(m3.Digits) {
 				m3.Digits = append(m3.Digits, m2Digits[i])
 			} else {
-				m3.Digits[i] += m2Digits[i]
+				carry := (m3.Digits[i] + m2Digits[i]) / 16
+				m3.Digits[i] = (m3.Digits[i] + m2Digits[i]) % 16
+				j := i + 1
+				for carry > 0 {
+					if j == len(m3.Digits) {
+						m3.Digits = append(m3.Digits, 0)
+					}
+					m3.Digits[j] += carry
+					carry = m3.Digits[j] / 16
+					m3.Digits[j] = m3.Digits[j] % 16
+					j++
+				}
 			}
 		}
 	} else if len(m2Digits) < len(mDigits) {
@@ -55,12 +65,23 @@ func (m MInt) Add(m2 MInt) MInt {
 			if i >= len(m3.Digits) {
 				m3.Digits = append(m3.Digits, mDigits[i])
 			} else {
-				m3.Digits[i] += mDigits[i]
+				carry := (m3.Digits[i] + mDigits[i]) / 16
+				m3.Digits[i] = (m3.Digits[i] + mDigits[i]) % 16
+				j := i + 1
+				for carry > 0 {
+					if j == len(m3.Digits) {
+						m3.Digits = append(m3.Digits, 0)
+					}
+					m3.Digits[j] += carry
+					carry = m3.Digits[j] / 16
+					m3.Digits[j] = m3.Digits[j] % 16
+					j++
+				}
 			}
 		}
 	}
 
-	for i, j := 0, len(m3.Digits)-1; i < j; i, j = i+1, j-1 {
+	for i, j := 0, len(m3.Digits)-1; i < j; i, j = i+1, j-1 { // get back to most significant first
 		m3.Digits[i], m3.Digits[j] = m3.Digits[j], m3.Digits[i]
 	}
 	return m3
@@ -70,25 +91,27 @@ func (m MInt) Sub(m2 MInt) MInt {
 	if !m.GreaterEq(m2) {
 		panic("Substraction of a smaller number from a bigger one: " + m.ToString() + " - " + m2.ToString() + " is not possible.")
 	}
-
 	var m3 MInt
 	mDigits := m.getDigits()
 	m2Digits := m2.getDigits()
 	DigitsNb := len(m2Digits)
 
-	m3.Digits = make([]uint8, len(mDigits))
-
 	for i := 0; i < DigitsNb; i++ {
 		if mDigits[i] < m2Digits[i] {
+			j := i + 1
+			for mDigits[j] == 0 {
+				mDigits[j] = 15
+				j++
+			}
+
 			mDigits[i] += 16
-			mDigits[i+1]--
+			mDigits[j] = mDigits[j] - 1
 		}
-		m3.Digits[i] = mDigits[i] - m2Digits[i]
+		mDigits[i] = mDigits[i] - m2Digits[i]
 	}
 
-	for i, j := 0, len(m3.Digits)-1; i < j; i, j = i+1, j-1 {
-		m3.Digits[i], m3.Digits[j] = m3.Digits[j], m3.Digits[i]
-	}
+	m3.Digits = mDigits
+	m3.Digits = m3.getDigits()
 
 	for i := 0; i < len(m3.Digits); i++ { // remove leading 0s
 		if m3.Digits[i] != 0 {
@@ -108,11 +131,11 @@ func (m MInt) SubMod(m2 MInt, mod MInt) MInt {
 }
 
 func (m MInt) Multi(i int) MInt {
-	return m.Mult(MIntFromString(strconv.Itoa(i)))
+	return m.Mult(MIntFromInt(i))
 }
 
 func (m MInt) Mult(m2 MInt) MInt {
-	var m3 MInt
+	var sum MInt
 	var multDigitsnb int
 	var m2Digits = m2.getDigits()
 	var mDigits = m.getDigits()
@@ -125,48 +148,45 @@ func (m MInt) Mult(m2 MInt) MInt {
 	}
 
 	for i := 0; i < multDigitsnb; i++ {
-		var m4 MInt
-		m4.Digits = make([]uint8, i)
-		for j := 0; j < len(m.Digits); j++ {
-			if j >= len(m4.Digits) {
-				m4.Digits = append(m4.Digits, 0)
+		var current MInt
+		current.Digits = make([]uint8, i)
+		for j := 0; j < len(m2Digits); j++ {
+			if j >= len(current.Digits) {
+				current.Digits = append(current.Digits, 0)
 			}
-			a := (m4.Digits[j] + mDigits[i]*m2Digits[j])
+			a := (current.Digits[j] + mDigits[i]*m2Digits[j])
 			carry := a / 16
-			m4.Digits[j] = a % 16
+			current.Digits[j] = a % 16
 			c := j + 1
 			for carry > 0 {
-				if c == len(m4.Digits) {
-					m4.Digits = append(m4.Digits, 0)
+				if c == len(current.Digits) {
+					current.Digits = append(current.Digits, 0)
 				}
-				m4.Digits[c] += carry
-				carry = m4.Digits[c] / 16
-				m4.Digits[c] = m4.Digits[c] % 16
+				current.Digits[c] += carry
+				carry = current.Digits[c] / 16
+				current.Digits[c] = current.Digits[c] % 16
 				c++
 			}
 		}
 		for j := 0; j < i; j++ {
-			m4.Digits = append(m4.Digits, 0)
+			current.Digits = append(current.Digits, 0)
 		}
-		m4.Digits = m4.getDigits()
-		for j := 0; j+i < len(m4.Digits); j++ {
-			m4.Digits[j] = m4.Digits[j+i]
+		for j := len(current.Digits) - 1; j-i >= 0; j-- {
+			current.Digits[j] = current.Digits[j-i]
 		}
-		for j := len(m4.Digits) - 1; j >= len(m4.Digits)-i; j-- {
-			m4.Digits[j] = 0
+		for j := 0; j < i; j++ {
+			current.Digits[j] = 0
 		}
 
-		m3.Digits = m3.getDigits()
-		m3 = m3.Add(m4)
-		m3.Digits = m3.getDigits()
+		current.Digits = current.getDigits()
+		sum = sum.Add(current)
 	}
 
-	m3.Digits = m3.getDigits()
-	return m3
+	return sum
 }
 
 func (m MInt) Div(i int) MInt {
-	return m.Divide(MIntFromString(strconv.Itoa(i)))
+	return m.Divide(MIntFromInt(i))
 }
 
 func (m MInt) Divide(m2 MInt) MInt {
@@ -175,11 +195,21 @@ func (m MInt) Divide(m2 MInt) MInt {
 		m = m.Sub(m2)
 		q++
 	}
-	return MIntFromString(strconv.Itoa(q))
+	return MIntFromInt(q)
+}
+
+func (m MInt) Divide256() MInt {
+	var m2 MInt
+	l := len(m.Digits)
+	if l <= 2 {
+		return m2
+	}
+	m2.Digits = m.Digits[0 : l-2]
+	return m2
 }
 
 func (m MInt) Modi(i int) MInt {
-	return m.Mod(MIntFromString(strconv.Itoa(i)))
+	return m.Mod(MIntFromInt(i))
 }
 
 func (m MInt) Mod(m2 MInt) MInt {
@@ -187,6 +217,16 @@ func (m MInt) Mod(m2 MInt) MInt {
 		m = m.Sub(m2)
 	}
 	return m
+}
+
+func (m MInt) Mod256() MInt {
+	var m2 MInt
+	l := len(m.Digits)
+	if l <= 2 {
+		return m
+	}
+	m2.Digits = m.Digits[l-2:]
+	return m2
 }
 
 func (m MInt) Eq(m2 MInt) bool {
@@ -237,6 +277,10 @@ func (m MInt) GreaterEq(m2 MInt) bool {
 
 func MIntFromString(s string) MInt {
 	var m MInt
+	if s == "0" {
+		return m
+	}
+
 	for i := 0; i < len(s); i++ {
 		if s[i] >= '0' && s[i] <= '9' {
 			m.Digits = append(m.Digits, s[i]-'0')
@@ -249,7 +293,21 @@ func MIntFromString(s string) MInt {
 	return m
 }
 
+func MIntFromInt(i int) MInt {
+	var m MInt
+	for i > 0 {
+		m.Digits = append(m.Digits, uint8(i%16))
+		i /= 16
+	}
+	m.Digits = m.getDigits() // reverse Digits: most significant first
+	return m
+}
+
 func (m MInt) ToString() string {
+	if len(m.Digits) == 0 {
+		return "0"
+	}
+
 	var s string
 	for i := 0; i < len(m.Digits); i++ {
 		if m.Digits[i] < 10 {
@@ -259,6 +317,17 @@ func (m MInt) ToString() string {
 		}
 	}
 	return s
+}
+
+func (m MInt) ToInt() int {
+	sum := 0
+	p := 1
+	digits := m.getDigits() // less significant first
+	for i := 0; i < len(digits); i++ {
+		sum += int(digits[i]) * p
+		p *= 16
+	}
+	return sum
 }
 
 func Rand() MInt {

@@ -18,6 +18,7 @@ func main() {
 	networking.Init(config)
 	logging.Log("MaxChain started", "main", "INFO")
 
+	//testEncoding()
 	//testMaths()
 	//cryptography.TestCrypto()
 
@@ -37,7 +38,9 @@ func testMaths() {
 	fmt.Println(cryptography.MIntFromString("a").Add(cryptography.MIntFromString("1a")).ToString())
 
 	fmt.Println(cryptography.MIntFromString("123456789abcdef").Multi(2).ToString())
+	fmt.Println(cryptography.MIntFromString("123456789abcdef").Mult(cryptography.MIntFromString("a1")).ToString())
 	fmt.Println(cryptography.MIntFromString("123456789abcdef").Mult(cryptography.MIntFromString("ae13d")).ToString())
+	fmt.Println(cryptography.MIntFromString("ae13d").Mult(cryptography.MIntFromString("123456789abcdef")).ToString())
 	fmt.Println(cryptography.MIntFromString("8fd").Mult(cryptography.MIntFromString("d")).ToString())
 	fmt.Println(cryptography.MIntFromString("8fd").Eq(cryptography.MIntFromString("d")))
 	fmt.Println(cryptography.MIntFromString("123456789abcdef").Multi(2).Eq(cryptography.MIntFromString("2468acf13579bde")))
@@ -49,4 +52,10 @@ func testMaths() {
 	fmt.Println(cryptography.MIntFromString("123456789abcdef").Sub(cryptography.MIntFromString("123456789abcdef")).ToString())
 	fmt.Println(cryptography.MIntFromString("123456789bbcdef").Sub(cryptography.MIntFromString("123456789abcdef")).ToString())
 	fmt.Println(cryptography.MIntFromString("12345678aabcdef").Sub(cryptography.MIntFromString("123456789bbcdef")).ToString())
+}
+
+func testEncoding() {
+	aaa := cryptography.EncodeMsgToMInt("[{\"type\":\"transaction\",\"from\":\"0x]")
+	fmt.Println(aaa.ToString())
+	fmt.Println(cryptography.DecodeMIntToMsg(aaa))
 }
